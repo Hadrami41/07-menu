@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { RESTAURANT } from './config'
 import { categories, products, type Category, type Product } from './data/menu'
+import { useCart, type CartLine } from './cart'
 import './App.css'
 
 const ALL = 'all'
@@ -19,6 +20,8 @@ function normalize(s: string) {
 function App() {
   const [active, setActive] = useState<string>(ALL)
   const [query, setQuery] = useState('')
+  const [cartOpen, setCartOpen] = useState(false)
+  const { items, add, remove, clear } = useCart()
 
   const filtered = useMemo(() => {
     const q = normalize(query.trim())
@@ -43,6 +46,33 @@ function App() {
       .map((c) => ({ category: c, items: map.get(c.id)! }))
   }, [filtered])
 
+  // Lignes du panier, dans l'ordre du menu.
+  const lines = useMemo<CartLine[]>(
+    () =>
+      products
+        .filter((p) => items[p.id])
+        .map((p) => ({ product: p, qty: items[p.id] })),
+    [items],
+  )
+  const count = useMemo(() => lines.reduce((n, l) => n + l.qty, 0), [lines])
+  const total = useMemo(
+    () => lines.reduce((s, l) => s + l.qty * l.product.price, 0),
+    [lines],
+  )
+
+  // Commande pré-remplie envoyée sur WhatsApp.
+  const orderHref = useMemo(() => {
+    const intro = `Bonjour ${RESTAURANT.name}, je souhaite commander :`
+    const body = lines
+      .map(
+        (l) =>
+          `- ${l.qty}× ${l.product.name} (${l.qty * l.product.price} ${RESTAURANT.currency})`,
+      )
+      .join('\n')
+    const msg = `${intro}\n${body}\n\nTotal : ${total} ${RESTAURANT.currency}`
+    return `https://wa.me/${RESTAURANT.whatsapp}?text=${encodeURIComponent(msg)}`
+  }, [lines, total])
+
   return (
     <div className="app">
       <header className="hero">
@@ -63,8 +93,6 @@ function App() {
 
         <div className="hero-info">
           <span>{RESTAURANT.address}</span>
-          <span className="dot">·</span>
-          <span>{RESTAURANT.hours}</span>
           <span className="dot">·</span>
           <span>{RESTAURANT.daysOpen}</span>
         </div>
@@ -116,7 +144,7 @@ function App() {
         {grouped.length === 0 ? (
           <p className="empty">Aucun plat ne correspond à ta recherche.</p>
         ) : (
-          grouped.map(({ category, items }) => (
+          grouped.map(({ category, items: catItems }) => (
             <section key={category.id} className="cat-section">
               <div className="cat-section-head">
                 <h2 className="cat-title">
@@ -131,8 +159,9 @@ function App() {
               </div>
 
               <div className="products">
-                {items.map((p) => {
+                {catItems.map((p) => {
                   const cat = categoryById.get(p.category)
+                  const qty = items[p.id] ?? 0
                   return (
                     <article
                       key={p.id}
@@ -172,10 +201,36 @@ function App() {
                               {RESTAURANT.currency}
                             </span>
                           </span>
-                          {!p.available && (
-                            <span className="unavailable-tag">
-                              Indisponible
-                            </span>
+                          {!p.available ? (
+                            <span className="unavailable-tag">Indisponible</span>
+                          ) : qty > 0 ? (
+                            <div className="qty">
+                              <button
+                                type="button"
+                                className="qty-btn"
+                                onClick={() => remove(p.id)}
+                                aria-label={`Retirer un ${p.name}`}
+                              >
+                                −
+                              </button>
+                              <span className="qty-num">{qty}</span>
+                              <button
+                                type="button"
+                                className="qty-btn"
+                                onClick={() => add(p.id)}
+                                aria-label={`Ajouter un ${p.name}`}
+                              >
+                                +
+                              </button>
+                            </div>
+                          ) : (
+                            <button
+                              type="button"
+                              className="add-btn"
+                              onClick={() => add(p.id)}
+                            >
+                              Ajouter
+                            </button>
                           )}
                         </div>
                       </div>
@@ -202,9 +257,118 @@ function App() {
           WhatsApp · +{RESTAURANT.whatsapp}
         </a>
         <p className="footer-credit">
-          {RESTAURANT.address} · {RESTAURANT.hours} · {RESTAURANT.daysOpen}
+          {RESTAURANT.address} · {RESTAURANT.daysOpen}
         </p>
       </footer>
+
+      {count > 0 && <div className="cart-spacer" aria-hidden="true" />}
+
+      {count > 0 && (
+        <button
+          type="button"
+          className="cart-bar"
+          onClick={() => setCartOpen(true)}
+        >
+          <span className="cart-bar-count">{count}</span>
+          <span className="cart-bar-label">Voir le panier</span>
+          <span className="cart-bar-total">
+            {total} {RESTAURANT.currency}
+          </span>
+        </button>
+      )}
+
+      {cartOpen && (
+        <div
+          className="cart-overlay"
+          onClick={() => setCartOpen(false)}
+          role="presentation"
+        >
+          <div
+            className="cart-panel"
+            onClick={(e) => e.stopPropagation()}
+            role="dialog"
+            aria-modal="true"
+            aria-label="Mon panier"
+          >
+            <div className="cart-head">
+              <h2 className="cart-title">Mon panier</h2>
+              <button
+                type="button"
+                className="cart-close"
+                onClick={() => setCartOpen(false)}
+                aria-label="Fermer le panier"
+              >
+                ×
+              </button>
+            </div>
+
+            {lines.length === 0 ? (
+              <p className="cart-empty">Ton panier est vide.</p>
+            ) : (
+              <>
+                <ul className="cart-lines">
+                  {lines.map((l) => (
+                    <li key={l.product.id} className="cart-line">
+                      <div className="cart-line-info">
+                        <span className="cart-line-name">{l.product.name}</span>
+                        <span className="cart-line-unit">
+                          {l.product.price} {RESTAURANT.currency}
+                        </span>
+                      </div>
+                      <div className="qty">
+                        <button
+                          type="button"
+                          className="qty-btn"
+                          onClick={() => remove(l.product.id)}
+                          aria-label={`Retirer un ${l.product.name}`}
+                        >
+                          −
+                        </button>
+                        <span className="qty-num">{l.qty}</span>
+                        <button
+                          type="button"
+                          className="qty-btn"
+                          onClick={() => add(l.product.id)}
+                          aria-label={`Ajouter un ${l.product.name}`}
+                        >
+                          +
+                        </button>
+                      </div>
+                      <span className="cart-line-sub">
+                        {l.qty * l.product.price} {RESTAURANT.currency}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+
+                <div className="cart-foot">
+                  <div className="cart-total-row">
+                    <span>Total</span>
+                    <strong>
+                      {total} {RESTAURANT.currency}
+                    </strong>
+                  </div>
+                  <a
+                    className="cart-order"
+                    href={orderHref}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    Commander sur WhatsApp
+                  </a>
+                  <button
+                    type="button"
+                    className="cart-clear"
+                    onClick={clear}
+                  >
+                    Vider le panier
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   )
 }
