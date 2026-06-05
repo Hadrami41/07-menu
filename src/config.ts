@@ -6,7 +6,7 @@ export const RESTAURANT = {
   whatsapp: '22237053707',
   currency: 'MRU',
   address: 'Atar',
-  hours: '12H – 23H',
+  hours: '18:00 – 02:00',
   daysOpen: '7J/7',
   welcomeLabel: 'BIENVENUE',
 } as const

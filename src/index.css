@@ -29,6 +29,20 @@
   text-rendering: optimizeLegibility;
 }
 
+/* Thème « vert » : mix orange + vert + or (couleurs mauritaniennes),
+   basculé via le sélecteur de couleur. Seuls les accents changent ;
+   l'orange et l'or des dégradés sont conservés. */
+:root[data-theme='vert'] {
+  --c-bg: #f1f6ef;
+  --c-ink: #15271c;
+  --c-deep: #16402b;
+  --c-deep-2: #2a6342;
+  --c-muted: #5c6a5d;
+  --c-line: #e1ebdd;
+  --c-line-strong: #c6d7c1;
+  --c-red-orange: #1f9d57;
+}
+
 *,
 *::before,
 *::after {
