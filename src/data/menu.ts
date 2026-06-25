@@ -144,7 +144,7 @@ export const products: Product[] = [
     name: 'Paguetta',
     category: 'sandwichs',
     description: "Pain baguette gratine au fromage, beurre d'ail et persil",
-    price: 60,
+    price: 200,
     image: '/products/buguetta.jpeg',
     available: true,
   },
