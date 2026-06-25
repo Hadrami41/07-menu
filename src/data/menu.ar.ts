@@ -27,7 +27,7 @@ export const productAr: Record<string, { name: string; description: string }> = 
   'pizza-mix': { name: 'بيتزا مكس', description: 'صلصة طماطم، موزاريلا، لحم ودجاج' },
   'pizza-papillon': { name: 'بيتزا بابيون', description: 'إضافات خاصة منزلية' },
   'pizza-margherita': { name: 'بيتزا مارغريتا', description: 'صلصة طماطم، موزاريلا وريحان' },
-  sandwich: { name: 'ساندويتش', description: 'خبز طازج وحشوة اليوم' },
+  sandwich: { name: 'باغيتا', description: 'خبز باغيت محمص بالجبن وزبدة الثوم والبقدونس' },
   'sandwich-07': { name: 'ساندويتش 07', description: 'خبز، لحم، بيض، سلطة وصلصة منزلية' },
   'sandwich-mix': { name: 'ساندويتش مكس', description: 'خبز، لحم ودجاج، سلطة وصلصة منزلية' },
   'sandwich-poulet': { name: 'ساندويتش دجاج', description: 'خبز طازج، دجاج مشوي، خضار وصلصة' },

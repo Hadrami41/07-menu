@@ -142,7 +142,7 @@ export const products: Product[] = [
   {
     id: 'sandwich',
     name: 'Paguetta',
-    category: 'sandwichs',
+    category: 'pizza',
     description: "Pain baguette gratine au fromage, beurre d'ail et persil",
     price: 200,
     image: '/products/buguetta.jpeg',
